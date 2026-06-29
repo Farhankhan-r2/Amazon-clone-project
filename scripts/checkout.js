@@ -1,26 +1,26 @@
 import { products } from '../data/products.js';
 import { cart } from '../data/cart.js';
+function renderOrderSummary() {
+  let orderSummary = ``;
+  cart.forEach((cartItem) => {
 
-let orderSummary = ``;
-cart.forEach((cartItem) => {
-
-  let matchingItem = products.find(product => product.id === cartItem.productId);
-  if (matchingItem) {
-    orderSummary += `
+    let matchingProduct = products.find(product => product.id === cartItem.productId);
+    if (matchingProduct) {
+      orderSummary += `
     <div class="cart-item-container">
           <div class="delivery-date">
             Delivery date: Tuesday, June 21
           </div>
 
           <div class="cart-item-details-grid">
-            <img class="product-image" src="${matchingItem.image}">
+            <img class="product-image" src="${matchingProduct.image}">
 
             <div class="cart-item-details">
               <div class="product-name">
-                ${matchingItem.name}
+                ${matchingProduct.name}
               </div>
               <div class="product-price">
-                 $${(matchingItem.priceCents * cartItem.quantity / 100).toFixed(2)}
+                 $${(matchingProduct.priceCents * cartItem.quantity / 100).toFixed(2)}
               </div>
               <div class="product-quantity">
                 <span>
@@ -29,7 +29,7 @@ cart.forEach((cartItem) => {
                 <span class="update-quantity-link link-primary">
                   Update
                 </span>
-                <span class="delete-quantity-link link-primary">
+                <span class="delete-quantity-link link-primary js-delete-btn " data-product-id="${matchingProduct.id}">
                   Delete
                 </span>
               </div>
@@ -40,7 +40,7 @@ cart.forEach((cartItem) => {
                 Choose a delivery option:
               </div>
               <div class="delivery-option">
-                <input type="radio" checked class="delivery-option-input" name="delivery-option-${matchingItem.id}">
+                <input type="radio" checked class="delivery-option-input" name="delivery-option-${matchingProduct.id}">
                 <div>
                   <div class="delivery-option-date">
                     Tuesday, June 21
@@ -51,7 +51,7 @@ cart.forEach((cartItem) => {
                 </div>
               </div>
               <div class="delivery-option">
-                <input type="radio" class="delivery-option-input" name="delivery-option-${matchingItem.id}">
+                <input type="radio" class="delivery-option-input" name="delivery-option-${matchingProduct.id}">
                 <div>
                   <div class="delivery-option-date">
                     Wednesday, June 15
@@ -62,7 +62,7 @@ cart.forEach((cartItem) => {
                 </div>
               </div>
               <div class="delivery-option">
-                <input type="radio" class="delivery-option-input" name="delivery-option-${matchingItem.id}">
+                <input type="radio" class="delivery-option-input" name="delivery-option-${matchingProduct.id}">
                 <div>
                   <div class="delivery-option-date">
                     Monday, June 13
@@ -77,7 +77,30 @@ cart.forEach((cartItem) => {
         </div>
    `;
 
-  }
+    }
+  });
+  document.querySelector('.js-order-summary').innerHTML = orderSummary;
+};
+renderOrderSummary();
+
+document.querySelectorAll('.js-delete-btn').forEach((deleteBtn) => {
+  deleteBtn.addEventListener('click', () => {
+    const deleteBtnId = deleteBtn.dataset.productId;
+    const removeProduct = cart.find(item => item.productId === deleteBtnId);
+    if (removeProduct.quantity) {
+      if (removeProduct.quantity === 1) {
+        const index = cart.findIndex(item => item.productId === deleteBtnId);
+        cart.splice(index, 1);
+      } else {
+        removeProduct.quantity--;
+      }
+      localStorage.setItem('cart', JSON.stringify(cart));
+      location.reload();
+
+    };
+    renderOrderSummary();
+  });
+
 });
-document.querySelector('.js-order-summary').innerHTML = orderSummary;
+
 
