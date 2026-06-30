@@ -1,15 +1,18 @@
+import dayjs from 'https://unpkg.com/supersimpledev@8.5.0/dayjs/esm/index.js';
 import { products } from '../data/products.js';
-import { cart } from '../data/cart.js';
+import { cart, removeFromCart } from '../data/cart.js';
+import { deliveryOptions } from '../data/deliveryOptions.js';
 function renderOrderSummary() {
   let orderSummary = ``;
+  const today = dayjs();
+  const dateString = today.format('dddd, MMMM  D');
   cart.forEach((cartItem) => {
-
     let matchingProduct = products.find(product => product.id === cartItem.productId);
     if (matchingProduct) {
       orderSummary += `
     <div class="cart-item-container">
           <div class="delivery-date">
-            Delivery date: Tuesday, June 21
+            Delivery date: ${dateString}
           </div>
 
           <div class="cart-item-details-grid">
@@ -39,39 +42,7 @@ function renderOrderSummary() {
               <div class="delivery-options-title">
                 Choose a delivery option:
               </div>
-              <div class="delivery-option">
-                <input type="radio" checked class="delivery-option-input" name="delivery-option-${matchingProduct.id}">
-                <div>
-                  <div class="delivery-option-date">
-                    Tuesday, June 21
-                  </div>
-                  <div class="delivery-option-price">
-                    FREE Shipping
-                  </div>
-                </div>
-              </div>
-              <div class="delivery-option">
-                <input type="radio" class="delivery-option-input" name="delivery-option-${matchingProduct.id}">
-                <div>
-                  <div class="delivery-option-date">
-                    Wednesday, June 15
-                  </div>
-                  <div class="delivery-option-price">
-                    $4.99 - Shipping
-                  </div>
-                </div>
-              </div>
-              <div class="delivery-option">
-                <input type="radio" class="delivery-option-input" name="delivery-option-${matchingProduct.id}">
-                <div>
-                  <div class="delivery-option-date">
-                    Monday, June 13
-                  </div>
-                  <div class="delivery-option-price">
-                    $9.99 - Shipping
-                  </div>
-                </div>
-              </div>
+           ${renderDeliveryOptions(matchingProduct.id, cartItem)}
             </div>
           </div>
         </div>
@@ -82,25 +53,42 @@ function renderOrderSummary() {
   document.querySelector('.js-order-summary').innerHTML = orderSummary;
 };
 renderOrderSummary();
+function renderDeliveryOptions(productIdPram, cartItemPram) {
+  let html = ``;
+  const today = dayjs();
+  deliveryOptions.forEach((option) => {
+    const deliveryDate = today.add(option.deliveryDays, 'days');
+    const dateString = deliveryDate.format('dddd, MMMM  D');
+    const priceString = option.priceCents === 0 ? 'FREE' : `$${(option.priceCents / 100).toFixed(2)}-`;
+
+    const isChecked = option.id === cartItemPram.deliveryOptionId;
+
+    html +=
+      `
+        <div class="delivery-option">
+                <input type="radio" 
+                  ${isChecked ? 'checked' : ''}
+                class="delivery-option-input" 
+                name="delivery-option-${productIdPram}">
+                <div>
+                  <div class="delivery-option-date">
+                    ${dateString}
+                  </div>
+                  <div class="delivery-option-price">
+                    ${priceString} Shipping
+                  </div>
+                </div>
+         </div>
+    `
+
+  });
+
+  return html;
+}
 
 document.querySelectorAll('.js-delete-btn').forEach((deleteBtn) => {
   deleteBtn.addEventListener('click', () => {
-    const deleteBtnId = deleteBtn.dataset.productId;
-    const removeProduct = cart.find(item => item.productId === deleteBtnId);
-    if (removeProduct.quantity) {
-      if (removeProduct.quantity === 1) {
-        const index = cart.findIndex(item => item.productId === deleteBtnId);
-        cart.splice(index, 1);
-      } else {
-        removeProduct.quantity--;
-      }
-      localStorage.setItem('cart', JSON.stringify(cart));
-      location.reload();
-
-    };
-    renderOrderSummary();
+    removeFromCart(deleteBtn);
   });
 
 });
-
-
